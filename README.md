@@ -16,6 +16,7 @@ too.
 
 ## Requirement
 
+- [HanaMinAFDKO Font](http://github.com/cjkvi/HanaMinAFDKO/)
 - [Emacs](http://www.gnu.org/software/emacs/) (version 24 or later)
 - [Cask](http://cask.github.io/)
 
