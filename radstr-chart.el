@@ -5,7 +5,7 @@
 ;; Author: KAWABATA, Taichi <kawabata.taichi_at_gmail.com>
 ;; Created: 2014-08-15
 ;; Keywords: i18n languages
-;; URL: https://github.com/kawabata/radstr-chart
+;; URL: https://github.com/kawabata/Radical-Strokes-Chart
 
 ;; Copyright (C) 2014  KAWABATA, Taichi
 
