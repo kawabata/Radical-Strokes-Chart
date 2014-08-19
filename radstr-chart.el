@@ -85,10 +85,6 @@ Simplified Radical should have X.1 number.")
   (radstr-calculate-table)
   (radstr-reverse-table-setup))
 
-(defun radstr-html-output ()
-  "2nd step. Output."
-  (radstr-html-setup))
-
 (defun radstr-table-setup ()
   "Set up initial `radstr-table'."
   (interactive)
@@ -256,7 +252,7 @@ Only when IDC is equal to DIR, then last element will be logger."
     (string< (car (gethash x radstr-ids-table))
              (car (gethash y radstr-ids-table)))))
 
-(defun radstr-html-setup ()
+(defun radstr-html-output ()
   "Output HTML file."
   (interactive)
   (let ((radstrs (sort (ht-keys radstr-rev-table)
@@ -348,7 +344,9 @@ Only when IDC is equal to DIR, then last element will be logger."
 <section data-type='chapter' id='main'>
 "))))
 
-(when noninteractive (radstr-setup))
+(when noninteractive
+  (radstr-setup)
+  (radstr-html-output))
 
 (provide 'radstr-chart)
 ;;; radstr-chart.el ends here
