@@ -28,10 +28,20 @@
 
 ;;; Code:
 
+;; Standard Libraries
+(require 'cl-lib)
+(require 'bytecomp)
+
+;; MELPA libraries
 (require 'dash)
 (require 'ids-edit)
-(require 'bytecomp)
 (require 'ht)
+
+;; Github libraries
+(require 'ids-db)
+
+(setq max-lisp-eval-depth 40000)
+(setq max-specpdl-size 100000)
 
 (defvar radstr-directory
   (file-name-directory (or byte-compile-current-file
@@ -233,7 +243,7 @@ Only when IDC is equal to DIR, then last element will be logger."
     (if (null idc) char
       (unless dir (setq dir idc))
       (if (/= idc dir) char
-        (callf radstr-serialize-char (elt ids 2) dir)
+        (cl-callf radstr-serialize-char (elt ids 2) dir)
         ids))))
 
 (defun radstr-serialize-string (char)
@@ -305,7 +315,7 @@ Only when IDC is equal to DIR, then last element will be logger."
     margin-left: 4px;
     margin-right: 4px;
     border: 1px;
-    font-family: Hanazono Mincho A, Hanazono Mincho B;
+    font-family: 'Hanazono Mincho A', 'Hanazono Mincho B';
     font-size: 24px;
   }
   figcaption {
@@ -346,6 +356,7 @@ Only when IDC is equal to DIR, then last element will be logger."
 
 (when noninteractive
   (radstr-setup)
+  (message "Radical Strokes Setup.")
   (radstr-html-output))
 
 (provide 'radstr-chart)

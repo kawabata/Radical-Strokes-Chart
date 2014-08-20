@@ -1,14 +1,22 @@
 Radical Strokes Chart Generator
 ==============================
 
-This tool creates a chart for radical strokes.
+This tool creates an HTML-based chart for radical strokes of UCS
+Ideographs
 
 ## Description
 
-There has been tremondous amount of ideographs encoded in UCS. This
-tool creates radical-strokes based charts for UCS. If image of non-UCS
-ideographs are given to specific directory, then they are embeeded,
-too.
+There has already been quite an amount of ideographs encoded in the
+UCS. This tool creates a radical-strokes based charts for UCS
+Ideographs. If an image of non-UCS ideographs are given to specific
+directory, then they are embeeded, too.
+
+This tool finds Radicals and Strokes of individual ideographs from
+both UCS standards and its IDS (Ideographic Description Sequence)
+information. When there are multiple (ambiguous) strokes, depending on
+dictionaries or policy, all these possible storke counts are covered
+in this chart. For example, 艹, 之, 㐄, 及, and 辶 are counted in both
+3 or 4 strokes.
 
 ## Demo
 
@@ -25,7 +33,7 @@ too.
 Run the following commands.
 
     cask install
-    cask run emacs --script radstr-chart.el
+    cask exec emacs --script radstr-chart.el
 
 This will creates "radstr.html", that you can print out to produce the
 document.
