@@ -7,22 +7,22 @@ Ideographs
 ## Description
 
 There has already been quite an amount of ideographs encoded in the
-UCS. This tool creates a radical-strokes based charts for UCS
-Ideographs. If an image of non-UCS ideographs are given to specific
-directory, then they are embeeded, too.
+UCS. This tool creates a radical-strokes based charts (in HTML) for
+*all* UCS Ideographs. If an image of non-UCS ideographs are given to
+specific directory, then they will also be embedded, too.
 
-This tool finds Radicals and Strokes of individual ideographs from
+This tool finds radicals and strokes of individual ideographs from
 both UCS standards and its IDS (Ideographic Description Sequence)
-information. When there are multiple (ambiguous) strokes, depending on
-dictionaries or policy, all these possible storke counts are covered
-in this chart. For example, 艹, 之, 㐄, 及, and 辶 are counted in both
-3 or 4 strokes.
+information. If there are multiple (ambiguous) possible strokes,
+depending on dictionaries or policy, then all such possible storke
+counts would covered in this chart. For example, 艹, 之, 㐄, 及, and
+辶 are counted in both 3 or 4 strokes.
 
-## Demo
+## Sample Screenshot
 
 ![Sample Screenshot](https://cloud.githubusercontent.com/assets/217020/3961395/6d4b8886-2753-11e4-9c63-b2e74eed48be.png)
 
-## Requirement
+## Requirements
 
 - [HanaMinAFDKO Font](http://github.com/cjkvi/HanaMinAFDKO/)
 - [Emacs](http://www.gnu.org/software/emacs/) (version 24 or later)
@@ -30,12 +30,15 @@ in this chart. For example, 艹, 之, 㐄, 及, and 辶 are counted in both
 
 ## Usage
 
-Run the following commands.
+PDF files can be downloaded from
+[releases](https://github.com/kawabata/Radical-Strokes-Chart/releases).
+If you want to create the file manually, then run the following
+commands.
 
     cask install
     cask exec emacs --script radstr-chart.el
 
-This will creates "radstr.html", that you can print out to produce the
+This will create "radstr.html", that you can print out to produce the
 document.
 
 ## Licence
