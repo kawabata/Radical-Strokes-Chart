@@ -18,6 +18,10 @@ depending on dictionaries or policy, then all such possible storke
 counts would covered in this chart. For example, 艹, 之, 㐄, 及, and
 辶 are counted in both 3 or 4 strokes.
 
+All ideographs that contains "月" components on topmost IDS structure
+are collected to "肉" radical besides its original radical-strokes
+position.
+
 ## Sample Screenshot
 
 ![Sample Screenshot](https://cloud.githubusercontent.com/assets/217020/3961395/6d4b8886-2753-11e4-9c63-b2e74eed48be.png)
@@ -43,7 +47,7 @@ document.
 
 ## Licence
 
-[MIT](http://opensource.org/licenses/MIT)
+[GPL](http://www.gnu.org/licenses/)
 
 ## Author
 

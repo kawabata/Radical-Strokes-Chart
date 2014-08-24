@@ -7,6 +7,8 @@ cjkvi/radical-split,<name>,部首IDS
 行,cjkvi/radical-split,⿲彳�亍
 衣,cjkvi/radical-split,⿳亠�𧘇
 舛,cjkvi/radical-split,⿳𫝀�㐄
+邑,cjkvi/radical-split,⿰�阝
+阜,cjkvi/radical-split,⿰阝�
 丿,cjkvi/radical-variant,乀
 丿,cjkvi/radical-variant,乁
 乙,cjkvi/radical-variant,乚
@@ -117,7 +119,6 @@ cjkvi/radical-split,<name>,部首IDS
 糸,cjkvi/radical-variant,糹,left
 糸,cjkvi/radical-variant-simplified,纟,left
 缶,cjkvi/radical-variant,𦈢
-网,cjkvi/radical-variant,⺳,top
 网,cjkvi/radical-variant,㓁,top
 网,cjkvi/radical-variant,䍏
 网,cjkvi/radical-variant,罒,top
@@ -240,6 +241,7 @@ cjkvi/radical-split,<name>,部首IDS
 齒,cjkvi/radical-variant-simplified,齿
 龍,cjkvi/radical-variant-simplified,龙
 龜,cjkvi/radical-variant,𪚦
+龜,cjkvi/radical-variant,亀
 龜,cjkvi/radical-variant,𪛉
 龜,cjkvi/radical-variant,𬺞
 龜,cjkvi/radical-variant-simplified,龟

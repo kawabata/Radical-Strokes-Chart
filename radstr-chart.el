@@ -7,7 +7,7 @@
 ;; Keywords: i18n languages
 ;; URL: https://github.com/kawabata/Radical-Strokes-Chart
 
-;; Copyright (C) 2014  KAWABATA, Taichi
+;; Copyright (C) 2014 KAWABATA, Taichi
 
 ;; Author: KAWABATA, Taichi <kawabata.taichi@lab.ntt.co.jp>
 
@@ -51,6 +51,8 @@
   (expand-file-name "radical-variants.txt" radstr-directory))
 (defvar radstr-cjksrc-file
   (expand-file-name "CJKSrc.txt" radstr-directory))
+(defvar radstr-cjksrc2-file
+  (expand-file-name "CJKSrc2.txt" radstr-directory))
 (defvar radstr-html-file
   (expand-file-name "radstr.html" radstr-directory))
 (defvar radstr-extf-file
@@ -101,6 +103,7 @@ Simplified Radical should have X.1 number.")
   (setq radstr-table (make-hash-table :test 'equal))
   (with-temp-buffer
     (insert-file-contents radstr-cjksrc-file)
+    (insert-file-contents radstr-cjksrc2-file)
     (goto-char (point-min))
     (while (re-search-forward
             "U\\+\\([0-9A-F]+\\)	kRSUnicode	\\([0-9]+\\('\\)?\\)\\.\\([0-9]+\\)"
@@ -132,6 +135,8 @@ Simplified Radical should have X.1 number.")
             (char (string-to-char (match-string 2))))
         (unless num (error "Not radical! %s" num))
         (puthash char num radstr-char2num-table)))
+    ;; exception case
+    (remhash ?阝 radstr-char2num-table)
     (goto-char (point-min))
     (while (re-search-forward
             "\\(.\\),cjkvi/radical-variant-simplified,\\(.\\)" nil t)
@@ -193,7 +198,16 @@ characters in `radstr-ids-table'."
                             (string-to-list (buffer-substring (match-end 0) (point-max)))))
                     (strokes (radstr-strokes-chars chars)))
                (dolist (stroke strokes)
-                 (radstr--addhash char (cons radical stroke) radstr-table))))))))
+                 (radstr--addhash char (cons radical stroke) radstr-table))))
+           ;; 阝 case
+           (maphash
+            (lambda (regexp radical)
+              (goto-char (point-min))
+              (when (looking-at regexp)
+                (dolist (stroke (radstr-strokes-chars
+                                 (string-to-list (match-string 1))))
+                  (radstr--addhash char (cons radical stroke) radstr-table))))
+            radstr-regexp2num-table)))))
    radstr-ids-table))
 
 (defun radstr-reverse-table-setup ()
@@ -208,7 +222,14 @@ characters in `radstr-ids-table'."
 (defun radstr-html-char-figure (char)
   "CHAR to HTML5 figcaption."
   (if (characterp char)
-      (format "<figure>%c<figcaption>%05X</figcaption></figure>" char char)
+      (if (and (< #x9fcc char) (< char #xa000))
+          (let ((file (format "./UNC/%04X.png" char)))
+            (message "char=%c file=%s" char file)
+            (if (file-exists-p (expand-file-name file))
+                (format
+                 "<figure><img height='24' src='%s' alt='%5X'/><figcaption>(%05X)</figcaption></figure>"
+                 file char char)))
+        (format "<figure>%c<figcaption>%05X</figcaption></figure>" char char))
     (let* ((string (symbol-name char))
            (_match (string-match "^\\(.+?\\)\\(F.\\)" string))
            (number (match-string 1 string))
@@ -293,10 +314,6 @@ Only when IDC is equal to DIR, then last element will be logger."
       (goto-char (point-min))
       (search-forward "<h1")
       (delete-region (point-min) (match-beginning 0))
-      (goto-char (point-max))
-      (insert "
-</table></section></body></html>")
-      (goto-char (point-min))
       (goto-char (point-min))
       (insert "<html>
 <head>
@@ -352,7 +369,10 @@ Only when IDC is equal to DIR, then last element will be logger."
 </ul>
 </nav>
 <section data-type='chapter' id='main'>
-"))))
+")
+      (goto-char (point-max))
+      (insert "
+</table></section></body></html>"))))
 
 (when noninteractive
   (radstr-setup)
