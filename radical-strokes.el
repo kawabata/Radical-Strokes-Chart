@@ -1,7 +1,7 @@
-;;; radstr-chart.el --- Creating Radical Strokes Chart  -*- lexical-binding: t; -*-
+;;; radical-strokes.el --- Radical and Strokes of Ideographs  -*- lexical-binding: t; -*-
 
-;; Filename: radstr-chart.el
-;; Description: Creating Radical Strokes Chart
+;; Filename: radical-strokes.el
+;; Description: Managing Radicals and Strokes of Kanji Characters
 ;; Author: KAWABATA, Taichi <kawabata.taichi_at_gmail.com>
 ;; Created: 2014-08-15
 ;; Keywords: i18n languages
@@ -40,9 +40,6 @@
 ;; Github libraries
 (require 'ids-db)
 
-(setq max-lisp-eval-depth 40000)
-(setq max-specpdl-size 100000)
-
 (defvar radstr-directory
   (file-name-directory (or byte-compile-current-file
                            load-file-name
@@ -53,8 +50,6 @@
   (expand-file-name "CJKSrc.txt" radstr-directory))
 (defvar radstr-cjksrc2-file
   (expand-file-name "CJKSrc2.txt" radstr-directory))
-(defvar radstr-html-file
-  (expand-file-name "radstr.html" radstr-directory))
 (defvar radstr-extf-file
   (expand-file-name "extf-ids.txt" radstr-directory))
 
@@ -219,30 +214,7 @@ characters in `radstr-ids-table'."
        (radstr--addhash radstr char radstr-rev-table)))
    radstr-table))
 
-(defun radstr-html-char-figure (char)
-  "CHAR to HTML5 figcaption."
-  (if (characterp char)
-      (if (and (< #x9fcc char) (< char #xa000))
-          (let ((file (format "./UNC/%04X.png" char)))
-            (message "char=%c file=%s" char file)
-            (if (file-exists-p (expand-file-name file))
-                (format
-                 "<figure><img height='24' src='%s' alt='%5X'/><figcaption>(%05X)</figcaption></figure>"
-                 file char char)))
-        (format "<figure>%c<figcaption>%05X</figcaption></figure>" char char))
-    (let* ((string (symbol-name char))
-           (_match (string-match "^\\(.+?\\)\\(F.\\)" string))
-           (number (match-string 1 string))
-           (f-set (match-string 2 string))
-           (file (concat "." ;; radstr-directory
-                         (if (equal (match-string 2 string) "F1")
-                             "/ExtF1v3/" "/ExtF2v2/")
-                         (match-string 1 string) ".png")))
-      (when (file-exists-p (expand-file-name file))
-        (format "<figure><img height='24' src='%s' alt='%s'/><figcaption>%s(%s)</figcaption></figure>"
-                file number number f-set)))))
-
-(defvar radstr-serialize-table (make-hash-table :test 'equal))
+;;; Serialization
 
 (defun radstr-serialize-char (char &optional dir)
   "Serialize CHAR (character, ids or symbol) with DIR.
@@ -267,117 +239,54 @@ Only when IDC is equal to DIR, then last element will be logger."
         (cl-callf radstr-serialize-char (elt ids 2) dir)
         ids))))
 
-(defun radstr-serialize-string (char)
-  "Serialize IDS string for comparison of CHAR."
-  (or (gethash char radstr-serialize-table)
+;;; Vectorization
+
+(defvar radstr-vectorize-table (make-hash-table :test 'equal))
+
+(defun radstr-vectorize-char (char)
+  "Vectorize IDS and cache CHAR."
+  (or (gethash char radstr-vectorize-table)
       (puthash
        char
-       (apply 'string (-flatten (radstr-serialize-char char)))
-       radstr-serialize-table)))
+       (radstr-vectorize
+        (radstr-serialize-char char))
+       radstr-vectorize-table)))
 
-(defun radstr-compare-chars (x y)
-  "Compare two chars X Y by IDS."
-  (if (featurep 'ids-db)
-      (string< (radstr-serialize-string x)
-               (radstr-serialize-string y))
-    (string< (car (gethash x radstr-ids-table))
-             (car (gethash y radstr-ids-table)))))
+(defun radstr-vectorize (ids)
+  (if (characterp ids) ids
+    (let* ((idc (car ids))
+           (1st (radstr-vectorize (elt ids 1)))
+           (2nd (radstr-vectorize (elt ids 2))))
+      (if (or (integerp 2nd)
+              (/= idc (car 2nd)))
+          (list idc 1st 2nd)
+        (cons idc (cons 1st (cdr 2nd)))))))
 
-(defun radstr-html-output ()
-  "Output HTML file."
-  (interactive)
-  (let ((radstrs (sort (ht-keys radstr-rev-table)
-                       (lambda (x y)
-                         (or (< (car x) (car y))
-                             (and (= (car x) (car y))
-                                  (< (cdr x) (cdr y)))))))
-        (old-rad 0))
-    (with-temp-file radstr-html-file
-      (dolist (radstr radstrs)
-        (let ((rad (car radstr))
-              (str (cdr radstr))
-              (chars (sort (copy-sequence (gethash radstr radstr-rev-table))
-                           'radstr-compare-chars)))
-          (when (/= rad old-rad)
-            (insert (format "
-</table>
+;;; Comparison of Ideographs
 
-<h1%s>%d (<span class='a'>%c</span>)</h1>
-<table>" (if (integerp rad) (format " id='r%03d'" rad) "")
-            rad (gethash rad radstr-num2char-table)))
-            (setq old-rad rad))
-          (insert (format "
-<tr><td>%s</td><td>%s</td><tr>"
-                          str
-                          (mapconcat 'radstr-html-char-figure
-                           chars "")))))
-      (goto-char (point-min))
-      (search-forward "<h1")
-      (delete-region (point-min) (match-beginning 0))
-      (goto-char (point-min))
-      (insert "<html>
-<head>
-<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
-<link rel='stylesheet' type='text/css' href='pdf.css' />
-<style type='text/css'>
-  @page {
-    @top-center {
-      content: string(Chapter);
-     }
-  }
-  figure {
-    text-align: center;
-    display: inline-block;
-    margin : 1px;
-    margin-left: 4px;
-    margin-right: 4px;
-    border: 1px;
-    font-family: 'Hanazono Mincho A', 'Hanazono Mincho B';
-    font-size: 24px;
-  }
-  figcaption {
-    font-family: Inconsolata;
-    font-size:xx-small;
-  }
-  table,td {
-    border-width: 0 0 0 0px;
-    border-collapse: collapse;
-    border:solid 1px;
-    background: none;
-    text-align: left;
-    text-indent: 0px;
-    vertical-align: top;
-  }
-  .a {font-family: Hanazono Mincho A; }
-  h1 {string-set: Chapter self; }
-  img {border: 1px solid red;}
-</style>
-</head>
-<body data-type='book'>
-  <section data-type='titlepage'>
-    <h1>UCS Ideographs Radical-Strokes Chart</h1>
-    <h2 data-type='author'>ISO/IEC JTC 1/SC 2/WG 2 IRG</h2>
-  </section>
-  <nav data-type='toc'>
-    <h2>Table of Contents</h2>
-<ul>
-")
-      (cl-do ((rad 1 (+ rad 1))) ((> rad 214))
-        (insert (format "<li><a href='#r%03d'>%d (%c)</a></li>\n" rad rad
-                        (gethash rad radstr-num2char-table))))
-      (insert "
-</ul>
-</nav>
-<section data-type='chapter' id='main'>
-")
-      (goto-char (point-max))
-      (insert "
-</table></section></body></html>"))))
+(defun radstr-compare-vectors (vec1 vec2)
+  (if (or (null vec1) (null vec2)) vec2
+    (if (or (listp vec1) (listp vec2))
+        (if (not (listp vec1)) t
+          (if (not (listp vec2)) nil
+            (if (equal vec1 vec2) (radstr-compare-vectors (cdr vec1) (cdr vec2))
+              (radstr-compare-vectors (car vec1) (car vec2)))))
+      (let ((rs1 (last (gethash (car vec1) radstr-table)))
+            (rs2 (last (gethash (car vec2) radstr-table))))
+        (if (or (null rs1) (null rs2)) rs2
+          (if (< (car rs1) (car rs2)) t
+            (if (and (= (car rs1) (car rs2))
+                     (< (cdr rs1) (cdr rs2))) t
+              (if (and (= (car rs1) (car rs2))
+                       (= (cdr rs1) (cdr rs2))
+                       (< (car vec1) (car vec2))) t
+                (radstr-compare-vectors (cdr vec1) (cdr vec2))))))))))
 
-(when noninteractive
-  (radstr-setup)
-  (message "Radical Strokes Setup.")
-  (radstr-html-output))
+(defun radstr-compare-chars (char1 char2)
+  (radstr-compare-vectors
+   (radstr-vectorize-char char1)
+   (radstr-vectorize-char char2)))
 
-(provide 'radstr-chart)
+(provide 'radical-strokes)
+
 ;;; radstr-chart.el ends here
