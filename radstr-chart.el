@@ -30,12 +30,12 @@
 
 ;; Standard Libraries
 (require 'cl-lib)
-(require 'bytecomp)
 
 ;; MELPA libraries
-(require 'dash)
 (require 'ht)
 
+;; misc
+(add-to-list 'load-path (file-name-directory (or load-file-name buffer-file-name)))
 (require 'radical-strokes)
 
 (defvar radstr-html-file
@@ -48,7 +48,6 @@
   (if (characterp char)
       (if (and (< #x9fcc char) (< char #xa000))
           (let ((file (format "./UNC/%04X.png" char)))
-            (message "char=%c file=%s" char file)
             (if (file-exists-p (expand-file-name file))
                 (format
                  "<figure><img height='24' src='%s' alt='%5X'/><figcaption>(%05X)</figcaption></figure>"
@@ -155,12 +154,19 @@
 ")
       (goto-char (point-max))
       (insert "
-</table></section></body></html>"))))
+</table></section></body></html>")
+      ;;
+      (goto-char (point-min))
+      (let ((count 0))
+        (while (search-forward "<figure" nil t)
+          (cl-incf count))
+        (message "total number of figures=%s" count)))))
 
 (when noninteractive
   (radstr-setup)
-  (message "Radical Strokes Setup.")
-  (radstr-html-output))
+  (message "Radical-Strokes data setup done.")
+  (radstr-html-output)
+  (message "HTML output done."))
 
 (provide 'radstr-chart)
 ;;; radstr-chart.el ends here

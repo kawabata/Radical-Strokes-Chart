@@ -216,13 +216,11 @@ characters in `radstr-ids-table'."
 
 ;;; Serialization
 
-(defun radstr-serialize-char (char &optional dir)
-  "Serialize CHAR (character, ids or symbol) with DIR.
+(defun radstr-serialize-char (char)
+  "Serialize CHAR (character, ids or symbol).
 If CHAR is symbol, equivalent IDS will be processed.
 If CHAR is character, its normalized IDS expansion will be examined.
-If IDS is null, then CHAR is returned.
-If DIR is null, first char of IDS will be used.
-Only when IDC is equal to DIR, then last element will be logger."
+If IDS is null, then CHAR is returned."
   (let* ((char (if (symbolp char)
                    (car
                     (ids-normalize-shrink
@@ -234,10 +232,8 @@ Only when IDC is equal to DIR, then last element will be logger."
                   (car (copy-tree (gethash char ids-normalize-table))) char))
          (idc (car-safe ids)))
     (if (null idc) char
-      (unless dir (setq dir idc))
-      (if (/= idc dir) char
-        (cl-callf radstr-serialize-char (elt ids 2) dir)
-        ids))))
+      (list idc (radstr-serialize-char (elt ids 1))
+            (radstr-serialize-char (elt ids 2))))))
 
 ;;; Vectorization
 
@@ -246,11 +242,12 @@ Only when IDC is equal to DIR, then last element will be logger."
 (defun radstr-vectorize-char (char)
   "Vectorize IDS and cache CHAR."
   (or (gethash char radstr-vectorize-table)
-      (puthash
-       char
-       (radstr-vectorize
-        (radstr-serialize-char char))
-       radstr-vectorize-table)))
+      (let ((vector (radstr-vectorize
+                     (radstr-serialize-char char))))
+        (puthash
+         char
+         (if (listp vector) vector (list vector))
+         radstr-vectorize-table))))
 
 (defun radstr-vectorize (ids)
   (if (characterp ids) ids
@@ -266,26 +263,39 @@ Only when IDC is equal to DIR, then last element will be logger."
 
 (defun radstr-compare-vectors (vec1 vec2)
   (if (or (null vec1) (null vec2)) vec2
-    (if (or (listp vec1) (listp vec2))
-        (if (not (listp vec1)) t
-          (if (not (listp vec2)) nil
-            (if (equal vec1 vec2) (radstr-compare-vectors (cdr vec1) (cdr vec2))
-              (radstr-compare-vectors (car vec1) (car vec2)))))
-      (let ((rs1 (last (gethash (car vec1) radstr-table)))
-            (rs2 (last (gethash (car vec2) radstr-table))))
-        (if (or (null rs1) (null rs2)) rs2
-          (if (< (car rs1) (car rs2)) t
-            (if (and (= (car rs1) (car rs2))
-                     (< (cdr rs1) (cdr rs2))) t
-              (if (and (= (car rs1) (car rs2))
-                       (= (cdr rs1) (cdr rs2))
-                       (< (car vec1) (car vec2))) t
-                (radstr-compare-vectors (cdr vec1) (cdr vec2))))))))))
+    (let ((car1 (car vec1))
+          (car2 (car vec2)))
+      (if (or (listp car1) (listp car2))
+          (if (not (listp car1)) t
+            (if (not (listp car2)) nil
+              (if (equal car1 car2)
+                  (radstr-compare-vectors (cdr vec1) (cdr vec2))
+                (radstr-compare-vectors car1 car2))))
+        ;; Neither car1 nor car2 is a list.
+        (if (= car1 car2) (radstr-compare-vectors (cdr vec1) (cdr vec2))
+          (let ((rs1 (car (last (gethash car1 radstr-table))))
+                (rs2 (car (last (gethash car2 radstr-table)))))
+            (if (or (null rs1) (null rs2))
+                (if (and (null rs1) (null rs2))
+                    (< car1 car2) rs2)
+              (if (< (car rs1) (car rs2)) t
+                (if (and (= (car rs1) (car rs2))
+                         (< (cdr rs1) (cdr rs2))) t
+                  (if (and (= (car rs1) (car rs2))
+                           (= (cdr rs1) (cdr rs2))
+                           (< car1 car2))
+                      t nil))))))))))
 
 (defun radstr-compare-chars (char1 char2)
-  (radstr-compare-vectors
-   (radstr-vectorize-char char1)
-   (radstr-vectorize-char char2)))
+  (let ((vec1 (radstr-vectorize-char char1))
+        (vec2 (radstr-vectorize-char char2)))
+    (if (equal vec1 vec2)
+        (if (characterp char1)
+            (if (characterp char2)
+                (< char1 char2)
+              t)
+          (if (characterp char2) nil t))
+      (radstr-compare-vectors vec1 vec2))))
 
 (provide 'radical-strokes)
 
