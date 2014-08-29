@@ -52,7 +52,9 @@
                 (format
                  "<figure><img height='24' src='%s' alt='%5X'/><figcaption>(%05X)</figcaption></figure>"
                  file char char)))
-        (format "<figure>%c<figcaption>%05X</figcaption></figure>" char char))
+        (if (not (equal char (car (get-char-code-property char 'decomposition))))
+            (format "<figure>%c<figcaption style='color:red'>%05X</figcaption></figure>" char char)
+          (format "<figure>%c<figcaption>%05X</figcaption></figure>" char char)))
     (let* ((string (symbol-name char))
            (_match (string-match "^\\(.+?\\)\\(F.\\)" string))
            (number (match-string 1 string))
