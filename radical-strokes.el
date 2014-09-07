@@ -155,8 +155,9 @@ Simplified Radical should have X.1 number.")
   (interactive)
   (with-temp-buffer
     (insert-file-contents radstr-extf-file)
+    (ids-replace-cdp)
     (while (re-search-forward
-            "^\\([0-9]+F[12]\\)/\\([0-9]+?\\)\\('\\)?\\.\\([0-9]+\\),\\(.+\\)" nil t)
+            "^\\([0-9]+F[12]\\)	\\([0-9]+?\\)\\('\\)?\\.\\([0-9]+\\)	\\(.+\\)" nil t)
       (let ((f-num (intern (match-string 1)))
             (radical (string-to-number (match-string 2)))
             (simplified (match-string 3))
